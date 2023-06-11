@@ -3,10 +3,7 @@ import { resolve, tokenize } from '../src/resolve';
 
 describe('resolve', () => {
     it('tokenizes complex expressions', () => {
-        let tokens = tokenize(
-            "greeting.response.body['friendly.greetings'][0].salutation",
-            {}
-        );
+        let tokens = tokenize("greeting.response.body['friendly.greetings'][0].salutation", {});
         expect(tokens[0]).to.be.equal('greeting');
         expect(tokens[1]).to.be.equal('response');
         expect(tokens[2]).to.be.equal('body');

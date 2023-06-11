@@ -29,5 +29,4 @@ describe('expression', () => {
         const expressions = findExpressions(line);
         expect(expressions.length).to.be.equal(3);
     });
-
 });

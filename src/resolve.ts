@@ -10,7 +10,11 @@ export const resolve = (expression: string, context: any, trusted = false): stri
 /**
  * Same as resolve(), but returns undefined if unresolved
  */
-export const resolveIf = (expression: string, context: any, trusted = false): string | undefined => {
+export const resolveIf = (
+    expression: string,
+    context: any,
+    trusted = false
+): string | undefined => {
     const res = resolve(expression, context, trusted);
     return res.startsWith('${') ? undefined : res;
 };
@@ -84,4 +88,3 @@ export const tokenize = (path: string, context: any): (string | number)[] => {
         return segs;
     }, []);
 };
-
