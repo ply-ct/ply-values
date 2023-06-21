@@ -9,6 +9,12 @@ export interface Request {
     source: string;
 }
 
+export interface RequestSuite {
+    name: string;
+    path: string;
+    requests: Request[];
+}
+
 export interface Flow {
     name: string;
     attributes?: { [key: string]: string };

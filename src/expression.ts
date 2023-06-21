@@ -1,4 +1,4 @@
-import { Flow, Request } from './model/ply';
+import { Flow, Request, RequestSuite } from './model/ply';
 
 export interface Expression {
     text: string;
@@ -37,20 +37,33 @@ export const replaceRefs = (expression: string, holder: string): string => {
     return expression.replace(/\${@\[/g, '${' + holder + '[').replace(/\${@/g, '${' + holder + '.');
 };
 
-export type ExpressionHolder = Request | Flow;
+export type ExpressionHolder = Request | RequestSuite | Flow;
 export const isRequest = (holder: ExpressionHolder): holder is Request => {
     return !!(holder as Request).method && !!(holder as Request).url;
 };
+export const isRequestSuite = (holder: ExpressionHolder): holder is RequestSuite => {
+    return !!(holder as RequestSuite).name && Array.isArray((holder as RequestSuite).requests);
+};
+export const isFlow = (holder: ExpressionHolder): holder is Flow => {
+    return !!(holder as Flow).name && Array.isArray((holder as Flow).steps);
+};
 
-export const expressions = (holder: ExpressionHolder): string[] => {
+export const expressions = (holder: ExpressionHolder, refs = false): string[] => {
     if (isRequest(holder)) {
-        return requestExpressions(holder);
+        return requestExpressions(holder, refs);
+    } else if (isRequestSuite(holder)) {
+        return holder.requests.reduce((exprs, req) => {
+            exprs.push(...requestExpressions(req, refs).filter((e) => !exprs.includes(e)));
+            return exprs;
+        }, [] as string[]);
+    } else if (isFlow(holder)) {
+        return flowExpressions(holder, refs);
     } else {
-        return flowExpressions(holder);
+        return [];
     }
 };
 
-export const requestExpressions = (request: Request, withRefs = false): string[] => {
+export const requestExpressions = (request: Request, refs: boolean): string[] => {
     let expressions = [
         ...getExpressions(request.method),
         ...getExpressions(request.url),
@@ -62,13 +75,14 @@ export const requestExpressions = (request: Request, withRefs = false): string[]
     if (request.body) {
         expressions = [...expressions, ...getExpressions(request.body)];
     }
+
     return expressions.filter((expr, i) => {
-        if (expr.startsWith('${@') && !withRefs) return false;
+        if (expr.startsWith('${@') && !refs) return false;
         return !expressions.slice(0, i).includes(expr); // no dups
     });
 };
 
-export const flowExpressions = (flow: Flow): string[] => {
+export const flowExpressions = (flow: Flow, refs: boolean): string[] => {
     let expressions: string[] = [];
     if (flow.attributes?.values) {
         const rows: string[][] = JSON.parse(flow.attributes.values);
@@ -80,7 +94,7 @@ export const flowExpressions = (flow: Flow): string[] => {
 
     const attributeExpressions = (attributes?: { [key: string]: string }): string[] => {
         if (attributes) {
-            return Object.values(attributes).reduce((exprs, attrKey) => {
+            return Object.keys(attributes).reduce((exprs, attrKey) => {
                 exprs.push(...getExpressions(attributes[attrKey]));
                 return exprs;
             }, [] as string[]);
@@ -105,9 +119,12 @@ export const flowExpressions = (flow: Flow): string[] => {
         });
     }
 
-    return expressions;
+    return expressions.filter((expr, i) => {
+        if (expr.startsWith('${@') && !refs) return false;
+        return !expressions.slice(0, i).includes(expr); // no dups
+    });
 };
 
-export const getExpressions = (content: string): string[] => {
-    return content.match(/\$\{.+?}/g) || [];
+export const getExpressions = (content?: string): string[] => {
+    return content?.match(/\$\{.+?}/g) || [];
 };
