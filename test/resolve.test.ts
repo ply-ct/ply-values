@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { resolve, tokenize } from '../src/resolve';
+import { isValidPropName, resolve, tokenize } from '../src/resolve';
 
 describe('resolve', () => {
     it('tokenizes complex expressions', () => {
@@ -47,5 +47,42 @@ describe('resolve', () => {
         };
         const output = resolve(input, values);
         expect(output).to.be.equal('Island of Lost Souls');
+    });
+
+    it('recognizes invalid property names', () => {
+        expect(isValidPropName('for')).to.be.false;
+        expect(isValidPropName('good')).to.be.true;
+        expect(isValidPropName('not.good')).to.be.false;
+        expect(isValidPropName('%worse')).to.be.false;
+    });
+
+    it('handles invalid context key', () => {
+        const nestedBad = {
+            foo: 'bar',
+            x: 3,
+            goodKey: 'always',
+            titles: {
+                'new.one': 'Frankenstein',
+                two: 'Island of Lost Souls'
+            }
+        };
+
+        const x = resolve('${x}', nestedBad, true);
+        expect(x).to.equal('3');
+        const newOne = resolve("${titles['new.one']}", nestedBad, true);
+        expect(newOne).to.equal('Frankenstein');
+
+        const topBad = {
+            'bad.key': 'never',
+            new: 'also bad',
+            goodKey: 'always',
+            titles: {
+                'not.new': 'Island of Lost Souls',
+                two: 'The Invisible Man'
+            }
+        };
+
+        const resolver = () => resolve('${goodKey}', topBad, true);
+        expect(resolver).to.throw('Bad property name(s): bad.key, new');
     });
 });

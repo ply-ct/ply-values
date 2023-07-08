@@ -47,8 +47,20 @@ export const resolveTrusted = (expression: string, context: any): string => {
     if (!(expr.startsWith('${') && expr.endsWith('}'))) {
         expr = '${' + expr + '}';
     }
+
+    // check for invalid prop names (only top-level)
+    const badKeys = Object.keys(context).filter((key) => !isValidPropName(key));
+    if (badKeys.length) {
+        throw new Error(`Bad property name(s): ${badKeys.join(', ')}`);
+    }
+
     const fun = new Function(...Object.keys(context), 'return `' + expr + '`');
     return fun(...Object.values(context));
+};
+
+export const isValidPropName = (prop: string): boolean => {
+    if (jsReservedWords.includes(prop)) return false;
+    return !!prop.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/);
 };
 
 export const tokenize = (path: string, context: any): (string | number)[] => {
@@ -88,3 +100,59 @@ export const tokenize = (path: string, context: any): (string | number)[] => {
         return segs;
     }, []);
 };
+
+const jsReservedWords = [
+    // https://mathiasbynens.be/notes/reserved-keywords#ecmascript-6
+    'do',
+    'if',
+    'in',
+    'for',
+    'let',
+    'new',
+    'try',
+    'var',
+    'case',
+    'else',
+    'enum',
+    'eval',
+    'null',
+    'this',
+    'true',
+    'void',
+    'with',
+    'await',
+    'break',
+    'catch',
+    'class',
+    'const',
+    'false',
+    'super',
+    'throw',
+    'while',
+    'yield',
+    'delete',
+    'export',
+    'import',
+    'public',
+    'return',
+    'static',
+    'switch',
+    'typeof',
+    'default',
+    'extends',
+    'finally',
+    'package',
+    'private',
+    'continue',
+    'debugger',
+    'function',
+    'arguments',
+    'interface',
+    'protected',
+    'implements',
+    'instanceof',
+    // These aren’t strictly reserved words, but they kind of behave as if they were.
+    'NaN',
+    'Infinity',
+    'undefined'
+];
