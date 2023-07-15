@@ -36,7 +36,7 @@ export class Values {
         // array reversed so that later values take precedence
         for (const valuesHolder of this.reversed) {
             const values = this.substEnvVars(valuesHolder.values);
-            const value = resolveIf(expr, values, this.options?.trusted);
+            const value = resolveIf(expr, values, this.options?.trusted, this.options?.logger);
             if (value) return { value, location: valuesHolder.location };
         }
         return null;

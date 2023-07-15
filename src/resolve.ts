@@ -1,10 +1,16 @@
 import { isRegex } from './expression';
+import { Logger } from './model/log';
 
-export const resolve = (expression: string, context: any, trusted = false): string => {
-    if (trusted) return resolveTrusted(expression, context);
+export const resolve = (
+    expression: string,
+    context: any,
+    trusted = false,
+    logger?: Logger
+): string => {
+    if (trusted) return resolveTrusted(expression, context, logger);
     if (isRegex(expression)) return expression;
 
-    return '' + safeEval(expression, context);
+    return '' + safeEval(expression, context, logger);
 };
 
 /**
@@ -13,13 +19,14 @@ export const resolve = (expression: string, context: any, trusted = false): stri
 export const resolveIf = (
     expression: string,
     context: any,
-    trusted = false
+    trusted = false,
+    logger?: Logger
 ): string | undefined => {
-    const res = resolve(expression, context, trusted);
+    const res = resolve(expression, context, trusted, logger);
     return res.startsWith('${') ? undefined : res;
 };
 
-export const safeEval = (expression: string, context: any): any => {
+export const safeEval = (expression: string, context: any, _logger?: Logger): any => {
     // escape all \
     let path = expression.replace(/\\/g, '\\\\');
     // trim ${ and }
@@ -40,7 +47,7 @@ export const safeEval = (expression: string, context: any): any => {
     return res;
 };
 
-export const resolveTrusted = (expression: string, context: any): string => {
+export const resolveTrusted = (expression: string, context: any, logger?: Logger): string => {
     if (expression.startsWith('${~')) return expression; // ignore regex
 
     let expr = expression;
@@ -48,14 +55,30 @@ export const resolveTrusted = (expression: string, context: any): string => {
         expr = '${' + expr + '}';
     }
 
-    // check for invalid prop names (only top-level)
-    const badKeys = Object.keys(context).filter((key) => !isValidPropName(key));
-    if (badKeys.length) {
-        throw new Error(`Bad property name(s): ${badKeys.join(', ')}`);
-    }
+    let keys = Object.keys(context);
 
-    const fun = new Function(...Object.keys(context), 'return `' + expr + '`');
-    return fun(...Object.values(context));
+    // weed out invalid prop names (only top-level)
+    const evalContext = context ? { ...context } : {};
+    keys = keys.filter((key) => {
+        const ok = isValidPropName(key);
+        if (!ok) {
+            delete evalContext[key];
+            logger?.error(`Bad property name: ${key}`);
+        }
+        return ok;
+    });
+
+    try {
+        const fun = new Function(...keys, 'return `' + expr + '`');
+        const res = fun(...Object.values(evalContext));
+        return res === 'undefined' ? expression : res;
+    } catch (err: unknown) {
+        if (`${err}`.startsWith('ReferenceError: ')) {
+            logger?.error(`${err}`); // expression key not found
+        }
+        logger?.error(`${err}: ${expression}`, err);
+        return expression;
+    }
 };
 
 export const isValidPropName = (prop: string): boolean => {

@@ -67,9 +67,9 @@ describe('resolve', () => {
             }
         };
 
-        const x = resolve('${x}', nestedBad, true);
+        const x = resolve('${x}', nestedBad, true, console);
         expect(x).to.equal('3');
-        const newOne = resolve("${titles['new.one']}", nestedBad, true);
+        const newOne = resolve("${titles['new.one']}", nestedBad, true, console);
         expect(newOne).to.equal('Frankenstein');
 
         const topBad = {
@@ -82,7 +82,44 @@ describe('resolve', () => {
             }
         };
 
-        const resolver = () => resolve('${goodKey}', topBad, true);
-        expect(resolver).to.throw('Bad property name(s): bad.key, new');
+        let good = resolve('${goodKey}', topBad, false, console);
+        expect(good).to.be.equal('always');
+
+        good = resolve('${goodKey}', topBad, true, console);
+        expect(good).to.be.equal('always');
+    });
+
+    it('handles missing context key', () => {
+        const context = {
+            foo: 'bar'
+        };
+
+        let missed = resolve('${missing.noway}', context, true);
+        expect(missed).to.be.equal('${missing.noway}');
+        missed = resolve('${missing.noway}', context, false);
+        expect(missed).to.be.equal('${missing.noway}');
+
+        missed = resolve("${missing['noway']}", context, true);
+        expect(missed).to.be.equal("${missing['noway']}");
+        missed = resolve("${missing['noway']}", context, false);
+        expect(missed).to.be.equal("${missing['noway']}");
+
+        missed = resolve('${foo.nope}', context, true);
+        expect(missed).to.be.equal('${foo.nope}');
+        missed = resolve('${foo.nope}', context, false);
+        expect(missed).to.be.equal('${foo.nope}');
+    });
+
+    it('handles bad expression', () => {
+        const context = {
+            foo: 'bar',
+            baz: { bump: 'log' }
+        };
+
+        const expr = "${baz['bump]}";
+        let res = resolve(expr, context, true, console);
+        expect(res).to.be.equal(expr);
+        res = resolve("${baz['bump]}", context, false, console);
+        expect(res).to.be.equal(expr);
     });
 });

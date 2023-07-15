@@ -1,7 +1,10 @@
+import { Logger } from './log';
+
 export interface EvalOptions {
     trusted?: boolean;
     refHolder?: string;
     env?: EnvironmentVariables;
+    logger?: Logger;
 }
 
 export type EnvironmentVariables = { [key: string]: string | undefined };

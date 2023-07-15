@@ -1,6 +1,6 @@
 {
   "name": "@ply-ct/ply-values",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Ply Values",
   "main": "dist/main.js",
   "files": [
