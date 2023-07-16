@@ -75,8 +75,9 @@ export const resolveTrusted = (expression: string, context: any, logger?: Logger
     } catch (err: unknown) {
         if (`${err}`.startsWith('ReferenceError: ')) {
             logger?.error(`${err}`); // expression key not found
+        } else {
+            logger?.error(`${err}: ${expression}`, err);
         }
-        logger?.error(`${err}: ${expression}`, err);
         return expression;
     }
 };
