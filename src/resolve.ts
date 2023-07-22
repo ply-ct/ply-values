@@ -7,6 +7,10 @@ export const resolve = (
     trusted = false,
     logger?: Logger
 ): string => {
+    if (typeof context === 'object' && Object.keys(context).includes(expression)) {
+        // direct evaluation of qualified expression (runtime/override values subst)
+        return context[expression] === undefined ? expression : context[expression];
+    }
     if (trusted) return resolveTrusted(expression, context, logger);
     if (isRegex(expression)) return expression;
 

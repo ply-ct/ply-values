@@ -49,6 +49,21 @@ describe('resolve', () => {
         expect(output).to.be.equal('Island of Lost Souls');
     });
 
+    it('handles expression context keys', () => {
+        const context = {
+            foo: 'bar',
+            '${something}': 'else',
+            '${now.is.the.time}': '12:00 sharp',
+            '${is.a.number}': 12345
+        };
+
+        expect(resolve('${foo}', context)).to.be.equal('bar');
+        expect(resolve('${something}', context)).to.be.equal('else');
+        expect(resolve('${now.is.the.time}', context)).to.be.equal('12:00 sharp');
+        expect(resolve('${is.a.number}', context)).to.be.equal(12345);
+        expect(resolve('${not.there}', context)).to.be.equal('${not.there}');
+    });
+
     it('recognizes invalid property names', () => {
         expect(isValidPropName('for')).to.be.false;
         expect(isValidPropName('good')).to.be.true;
