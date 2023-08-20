@@ -1,1 +1,1 @@
-export const plyValuesVersion = '0.3.3';
+export const plyValuesVersion = '0.3.4';
