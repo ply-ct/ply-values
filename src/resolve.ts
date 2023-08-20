@@ -76,11 +76,12 @@ export const resolveTrusted = (expression: string, context: any, logger?: Logger
         const fun = new Function(...keys, 'return `' + expr + '`');
         const res = fun(...Object.values(evalContext));
         return res === 'undefined' ? expression : res;
-    } catch (err: unknown) {
-        if (`${err}`.startsWith('ReferenceError: ')) {
-            logger?.error(`${err}`); // expression key not found
+    } catch (err: any) {
+        if (`${err?.message}`.startsWith('ReferenceError: ')) {
+            logger?.debug?.(`${expression}: ${err}`, err);
+            logger?.error(`${expression}: ${err?.message}`); // expression key not found
         } else {
-            logger?.error(`${err}: ${expression}`, err);
+            logger?.error(`${expression}: ${err}`, err);
         }
         return expression;
     }
