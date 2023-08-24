@@ -1,5 +1,9 @@
 import { Logger } from './log';
 
+export type Values = { [key: string]: any };
+export type Context = { [key: string]: any };
+export type ValueType = string | number | boolean | Date | null;
+
 export interface EvalOptions {
     trusted?: boolean;
     refHolder?: string;

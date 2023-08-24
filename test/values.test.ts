@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Values } from '../src/values';
+import { ValuesAccess } from '../src/values';
 import { ValuesHolder } from '../src/model/value';
 
 describe('values', () => {
@@ -49,12 +49,12 @@ describe('values', () => {
     };
 
     it('should merge value objects', async () => {
-        const valuesAccess = new Values([vals1, vals2]);
+        const valuesAccess = new ValuesAccess([vals1, vals2]);
         checkMergedValues(valuesAccess.getValues());
     });
 
     it('should locate values', async () => {
-        const values = new Values([vals1, vals2]);
+        const values = new ValuesAccess([vals1, vals2]);
         expect(values.getValue('${foo}')?.location?.path).to.be.equal('vals2');
         expect(values.getValue('${baz}')?.location?.path).to.be.equal('vals1');
         expect(values.getValue('${greeting.salutation}')?.location?.path).to.be.equal('vals2');
@@ -82,7 +82,7 @@ describe('values', () => {
             }
         };
 
-        const access = new Values([refVals], { refHolder: '__ply_results' });
+        const access = new ValuesAccess([refVals], { refHolder: '__ply_results' });
         const result = access.getValue('${@s7.response.body.id}');
         expect(result?.value).to.be.equal('435b30ad');
     });

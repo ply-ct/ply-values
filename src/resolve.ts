@@ -1,9 +1,10 @@
 import { isRegex } from './expression';
+import { Context } from './model/value';
 import { Logger } from './model/log';
 
 export const resolve = (
     expression: string,
-    context: any,
+    context: Context,
     trusted = false,
     logger?: Logger
 ): string => {
@@ -22,7 +23,7 @@ export const resolve = (
  */
 export const resolveIf = (
     expression: string,
-    context: any,
+    context: Context,
     trusted = false,
     logger?: Logger
 ): string | undefined => {
@@ -30,7 +31,7 @@ export const resolveIf = (
     return res.startsWith('${') ? undefined : res;
 };
 
-export const safeEval = (expression: string, context: any, _logger?: Logger): any => {
+export const safeEval = (expression: string, context: Context, _logger?: Logger): any => {
     // escape all \
     let path = expression.replace(/\\/g, '\\\\');
     // trim ${ and }
@@ -51,7 +52,7 @@ export const safeEval = (expression: string, context: any, _logger?: Logger): an
     return res;
 };
 
-export const resolveTrusted = (expression: string, context: any, logger?: Logger): string => {
+export const resolveTrusted = (expression: string, context: Context, logger?: Logger): string => {
     if (expression.startsWith('${~')) return expression; // ignore regex
 
     let expr = expression;
@@ -92,7 +93,7 @@ export const isValidPropName = (prop: string): boolean => {
     return !!prop.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/);
 };
 
-export const tokenize = (path: string, context: any): (string | number)[] => {
+export const tokenize = (path: string, context: Context): (string | number)[] => {
     return path.split(/\.(?![^[]*])/).reduce((segs: (string | number)[], seg) => {
         if (seg.search(/\[.+?]$/) > 0) {
             // indexer(s)

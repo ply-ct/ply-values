@@ -1,13 +1,13 @@
 import { merge } from 'merge-anything';
 import traverse from 'traverse';
-import { LocatedValue, ValuesHolder, EvalOptions } from './model/value';
+import { Values, LocatedValue, ValuesHolder, EvalOptions } from './model/value';
 import { resolveIf } from './resolve';
 import { isRef, replaceRefs } from './expression';
 
 /**
  * Values with substituted environment values.
  */
-export class Values {
+export class ValuesAccess {
     private locatedValues: { [expr: string]: LocatedValue | null } = {};
     private values?: object;
 
@@ -53,14 +53,14 @@ export class Values {
     }
 
     private mergeValues(): object {
-        let values: any = {};
+        let values: Values = {};
         for (const valuesHolder of this.valuesHolders) {
             values = merge(values, this.substEnvVars(valuesHolder.values));
         }
         return values;
     }
 
-    private substEnvVars(values: any): any {
+    private substEnvVars(values: Values): Values {
         // operate on a clone
         const vals = JSON.parse(JSON.stringify(values));
         const envVars = this.options?.env || {};
@@ -69,8 +69,8 @@ export class Values {
                 const envVar = val.match(/^\$\{.+?}/);
                 if (envVar && envVar.length === 1) {
                     const varName = envVar[0].substring(2, envVar[0].length - 1);
-                    let varVal: any = envVars[varName];
-                    if (typeof varVal === 'undefined' && val.trim().length > varName.length + 3) {
+                    let varVal = envVars[varName];
+                    if (varVal === undefined && val.trim().length > varName.length + 3) {
                         // fallback specified?
                         const extra = val.substring(envVar[0].length).trim();
                         if (extra.startsWith('||')) {
