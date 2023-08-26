@@ -48,16 +48,21 @@ export const isFlow = (holder: ExpressionHolder): holder is Flow => {
     return !!(holder as Flow).name && Array.isArray((holder as Flow).steps);
 };
 
+/**
+ * returns an array sorted by expression text
+ */
 export const expressions = (holder: ExpressionHolder, refs = false): string[] => {
     if (isRequest(holder)) {
-        return requestExpressions(holder, refs);
+        return requestExpressions(holder, refs).sort();
     } else if (isRequestSuite(holder)) {
-        return holder.requests.reduce((exprs, req) => {
-            exprs.push(...requestExpressions(req, refs).filter((e) => !exprs.includes(e)));
-            return exprs;
-        }, [] as string[]);
+        return holder.requests
+            .reduce((exprs, req) => {
+                exprs.push(...requestExpressions(req, refs).filter((e) => !exprs.includes(e)));
+                return exprs;
+            }, [] as string[])
+            .sort();
     } else if (isFlow(holder)) {
-        return flowExpressions(holder, refs);
+        return flowExpressions(holder, refs).sort();
     } else {
         return [];
     }
