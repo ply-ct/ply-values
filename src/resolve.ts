@@ -78,9 +78,12 @@ export const resolveTrusted = (expression: string, context: Context, logger?: Lo
         const res = fun(...Object.values(evalContext));
         return res === 'undefined' ? expression : res;
     } catch (err: any) {
-        if (`${err?.message}`.startsWith('ReferenceError: ')) {
-            logger?.debug?.(`${expression}: ${err}`, err);
-            logger?.error(`${expression}: ${err?.message}`); // expression key not found
+        if (`${err}`.startsWith('ReferenceError: ')) {
+            // ignore unresolved
+            if (!`${err}`.endsWith(' is not defined')) {
+                logger?.debug?.(`${expression}: ${err}`, err);
+                logger?.error(`${expression}: ${err?.message}`); // expression key not found
+            }
         } else {
             logger?.error(`${expression}: ${err}`, err);
         }
