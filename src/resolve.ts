@@ -1,4 +1,4 @@
-import { isRegex } from './expression';
+import { isExpression, isRegex } from './expression';
 import { Context } from './model/value';
 import { Logger } from './model/log';
 
@@ -8,7 +8,7 @@ export const resolve = (
     trusted = false,
     logger?: Logger
 ): string => {
-    if (typeof context === 'object' && Object.keys(context).includes(expression)) {
+    if (Object.keys(context).includes(expression)) {
         // direct evaluation of qualified expression (runtime/override values subst)
         return context[expression] === undefined ? expression : context[expression];
     }
@@ -68,7 +68,9 @@ export const resolveTrusted = (expression: string, context: Context, logger?: Lo
         const ok = isValidPropName(key);
         if (!ok) {
             delete evalContext[key];
-            logger?.error(`Bad property name: ${key}`);
+            if (!isExpression(key)) {
+                logger?.error(`Bad property name: ${key}`);
+            }
         }
         return ok;
     });
