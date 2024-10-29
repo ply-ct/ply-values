@@ -137,4 +137,21 @@ describe('resolve', () => {
         res = resolve("${baz['bump]}", context, false, console);
         expect(res).to.be.equal(expr);
     });
+
+    it('resolves display expression', () => {
+        const context = {
+            display: {
+                xs: [280, 351, 351, 466],
+                ys: [90, 90, 272, 272],
+                type: 'ElbowH',
+                x: null,
+                y: null
+            }
+        };
+
+        const expr = '${display.type}';
+
+        const res = resolve(expr, context, false, console);
+        expect(res).to.be.equal('ElbowH');
+    });
 });
